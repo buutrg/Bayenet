@@ -37,7 +37,7 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
   
   for(k in 1:max.steps){
 
-    if (k %% 100 == 0) {
+    if (k %% 50 == 0) {
       print(paste("Iteration", k, "of", max.steps))
     }
     #sample Gamma
