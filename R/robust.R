@@ -1,5 +1,4 @@
-
-robust <- function(X, Y, clin, max.steps, sparse, penalty,debugging=FALSE)
+robust <- function(X, Y, clin, max.steps, sparse, penalty,debugging=FALSE, ncores = 8)
 {
   dat = DataMatrix(X, Y, clin, intercept=TRUE, debugging=FALSE)
   c=dat$c; g=dat$g; y=dat$y; beta_true=dat$coef
@@ -20,7 +19,7 @@ robust <- function(X, Y, clin, max.steps, sparse, penalty,debugging=FALSE)
   if(sparse){
     fit=switch (penalty,
                 "lasso" = QBLSS(y,g,c,max.steps,hatb,hatEta,hatTau,hatV,hatSg2,ss2,invSigb0, hatPiEta,hatEtaSq2, theta, r,a ,b ,sh0,sh1, progress),
-                "elastic net" = Qenetss(y,g,c, theta, max.steps)
+                "elastic net" = Qenetss(y,g,c, theta, max.steps, ncores)
     )
   }else{
     fit=switch (penalty,
