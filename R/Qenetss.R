@@ -105,7 +105,6 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
     tausample[k,] = tau
 
     #sample t
-    # for(j in 1:p){
     res_t_list = mclapply(1:p, function(j) {
       if(beta[j]==0){
         flag = 1
@@ -156,9 +155,17 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
     
   }
   
-  
-  dat = list(GS.beta=betasample,t=tsample,tau=tausample,GS.b=Gammasamples,eta1=eta1sample,eta2=eta2sample,
-             v=vsample,pi=pisample, GS.SS=SS)
+  dat = list(
+    GS.beta=betasample,
+    t=tsample,
+    tau=tausample,
+    GS.b=Gammasamples,
+    eta1=eta1sample,
+    eta2=eta2sample,
+    v=vsample,
+    pi=pisample,
+    GS.SS=SS
+  )
   return(dat)
   
   
