@@ -36,7 +36,10 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
   gamma0 = 1
   
   for(k in 1:max.steps){
-    
+
+    if (k %% 100 == 0) {
+      print(paste("Iteration", k, "of", max.steps))
+    }
     #sample Gamma
     for(j in 1:q1)
     {
@@ -69,9 +72,6 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
     z <- rep(0,p)
     sg <- rep(0,p)
     res_param_list = pbmcapply::pbmclapply(1:p, function(j) {
-      if (j %% 100 == 0) {
-        print(paste("Sampling beta", j, "of", p))
-      }
       A = x[,j]^2/v
       invsigma2 = tau*sum(A)/xi2^2 + 2*eta2*t[j]/(t[j]-1)
       sigma2 = 1/invsigma2
