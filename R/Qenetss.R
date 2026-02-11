@@ -1,4 +1,4 @@
-Qenetss = function(y,x,c, theta, max.steps)
+Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
 {
   n = nrow(x)
   p = ncol(x)
@@ -68,7 +68,10 @@ Qenetss = function(y,x,c, theta, max.steps)
     #sample beta
     z <- rep(0,p)
     sg <- rep(0,p)
-    for(j in 1:p){
+    res_param_list = pbmcapply::pbmclapply(1:p, function(j) {
+      if (j %% 100 == 0) {
+        print(paste("Sampling beta", j, "of", p))
+      }
       A = x[,j]^2/v
       invsigma2 = tau*sum(A)/xi2^2 + 2*eta2*t[j]/(t[j]-1)
       sigma2 = 1/invsigma2
@@ -79,13 +82,17 @@ Qenetss = function(y,x,c, theta, max.steps)
       d = (2*eta2*t[j]/(t[j]-1))^(1/2)*sqrt(sigma2)*exp((1/2)*(sqrt(sigma2)*BB)^2)
       l = pi/(pi+(1-pi)*d)
       u = stats::runif(1)
-      if(u<l){
-        beta[j] = 0; z[j]=0; sg[j]=0
+      if (u<l){
+        return(list(beta=0, z=0, sg=0))
+      } else{
+        return(list(beta=stats::rnorm(1,mean=mu,sd=sqrt(sigma2)), z=1, sg=1))
       }
-      else{
-      beta[j] = stats::rnorm(1,mean=mu,sd=sqrt(sigma2)); z[j]=1; sg[j]=1
-      }
-    }
+    }, mc.cores = ncores)
+
+    beta = unlist(lapply(res_param_list, function(x) x$beta))
+    z = unlist(lapply(res_param_list, function(x) x$z))
+    sg = unlist(lapply(res_param_list, function(x) x$sg))
+
     betasample[k,]=beta
     SS[k,] <- sg
     
@@ -96,30 +103,32 @@ Qenetss = function(y,x,c, theta, max.steps)
     shape = a+3*n/2
     tau = stats::rgamma(1,shape=shape,rate=rate)
     tausample[k,] = tau
-    
+
     #sample t
-    for(j in 1:p){
+    # for(j in 1:p){
+    res_t_list = pbmcapply::pbmclapply(1:p, function(j) {
       if(beta[j]==0){
         flag = 1
         while (flag) {
           temp.t = hbmem::rtgamma(1,shape= 1/2,scale = 1/eta1,a=1, b=Inf)
           flag = (temp.t <=1)|(temp.t == Inf)
         }
-        t[j]=temp.t
+        return(temp.t)
+      } else{
+        temp.lambda = 2 * eta1
+        temp.nu =  sqrt(temp.lambda / (2*eta2*beta[j]^2))
+        flag = 1
+        while (flag) {
+          temp.s = SuppDists::rinvGauss(1, lambda = temp.lambda, nu = temp.nu)
+          flag = (temp.s<=0)|(is.na(temp.s))|(temp.s == Inf)
+        }
+        return(1 / temp.s + 1)
       }
-      else{
-    temp.lambda = 2 * eta1
-    temp.nu =  sqrt(temp.lambda / (2*eta2*beta[j]^2))
-    flag = 1
-    while (flag) {
-      temp.s = SuppDists::rinvGauss(1, lambda = temp.lambda, nu = temp.nu)
-      flag = (temp.s<=0)|(is.na(temp.s))|(temp.s == Inf)
-    }
-    t[j] = 1 / temp.s + 1
-      }
-    }
+    }, mc.cores = 4)
+    t = unlist(res_t_list)
+
     tsample[k,] = t
-    
+
     #sample eta1
     rejections = 0
     temp.shape = p + c1 
