@@ -35,7 +35,9 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
   Gamma = rep(1,q1)
   gamma0 = 1
   
+  pb <- utils::txtProgressBar(min = 0, max = max.steps, style = 3)
   for(k in 1:max.steps){
+    utils::setTxtProgressBar(pb, k)
 
     if (k %% 50 == 0) {
       print(paste("Iteration", k, "of", max.steps))
@@ -71,7 +73,7 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
     #sample beta
     z <- rep(0,p)
     sg <- rep(0,p)
-    res_param_list = pbmcapply::pbmclapply(1:p, function(j) {
+    res_param_list = mclapply(1:p, function(j) {
       A = x[,j]^2/v
       invsigma2 = tau*sum(A)/xi2^2 + 2*eta2*t[j]/(t[j]-1)
       sigma2 = 1/invsigma2
