@@ -106,7 +106,7 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
 
     #sample t
     # for(j in 1:p){
-    res_t_list = pbmcapply::pbmclapply(1:p, function(j) {
+    res_t_list = mclapply(1:p, function(j) {
       if(beta[j]==0){
         flag = 1
         while (flag) {
@@ -124,7 +124,7 @@ Qenetss = function(y,x,c, theta, max.steps, ncores = 8)
         }
         return(1 / temp.s + 1)
       }
-    }, mc.cores = 4)
+    }, mc.cores = ncores)
     t = unlist(res_t_list)
 
     tsample[k,] = t
